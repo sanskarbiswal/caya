@@ -71,8 +71,29 @@ function initLoad(){
     init_feed();
 }
 
+function refresh_components(data){
+    var i;
+    par = document.getElementById("component-search");
+    for(i=0;i<data.length;i++){
+        op = document.createElement('option');
+        op.innerHTML = data[i];
+        par.appendChild(op);
+    }
+}
 /* ############### jQuery System ################# */
-$(function () {
- $
-})
+function download()
+{
+    var path = "../data/components.csv"; //relative-path
+    $('location').attr('href',path);
+ }
 
+ $(function () {
+     $.ajax(
+   { url : '{{ url_for("autocomplete") }}' }
+  ).done(function(data){
+      $('#autocomplete').autocomplete({
+          source: data.json_list,
+          minLength: 2
+      });
+  });
+ });

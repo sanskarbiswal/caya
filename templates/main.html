@@ -127,7 +127,12 @@
                         <br><br><br>
                         <div class="w3-row w3-padding">
                             <form action="/search_comp" method="POST">
-                                <input name="search_component" class="w3-input w3-light-grey w3-threequarter w3-round w3-margin-right" type="search">
+                                <input id="autocomplete" list="component-search" name="search_component" class="w3-input w3-light-grey w3-threequarter w3-round w3-margin-right" type="search">
+                                <datalist id="component-search">
+                                    {% block javascript %}
+                                        refresh_components({{comp | tojson}});
+                                    {% endblock %}
+                                </datalist>
                                 <button class="w3-button w3-blue"><i class="fa fa-search"></i> Search</button>
                             </form>
                         </div>
@@ -154,23 +159,7 @@
             </div>
         </div>
             <hr>
-            <div class="w3-container">
-            <h5>General Stats</h5>
-            <p>New Visitors</p>
-            <div class="w3-grey">
-                <div class="w3-container w3-center w3-padding w3-green" style="width:25%">+25%</div>
-            </div>
-        
-            <p>New Users</p>
-            <div class="w3-grey">
-                <div class="w3-container w3-center w3-padding w3-orange" style="width:50%">50%</div>
-            </div>
-        
-            <p>Bounce Rate</p>
-            <div class="w3-grey">
-                <div class="w3-container w3-center w3-padding w3-red" style="width:75%">75%</div>
-            </div>
-            </div>
+            
             <hr>
             <div class="w3-container w3-dark-grey w3-padding-32">
                 <div class="w3-row">
@@ -182,15 +171,14 @@
                     </div>
                     <div class="w3-container w3-third">
                         <h5 class="w3-bottombar w3-border-red">Export</h5>
-                        <p>Browser</p>
-                        <p>OS</p>
-                        <p>More</p>
+                        <p><i class="fa fa-download"></i> <a href="#" onclick="download()">CSV</a></p>
+                        
                     </div>
                     <div class="w3-container w3-third">
                         <h5 class="w3-bottombar w3-border-orange">Feedback</h5>
                         <textarea class="w3-padding" id="feedback" rows="3" cols="60"></textarea>
                         <hr>
-                        <button class="w3-button w3-blue w3-text-black"><i class="fa fa-send"></i>Send</button>
+                        <button class="w3-button w3-blue w3-text-black"><i class="fa fa-send"></i> <a href="mailto:adityaraj.bhatt@vicara.co"></a>Send</button>
                     </div>
                 </div>
             </div>
@@ -198,6 +186,7 @@
             <footer class="w3-container w3-padding w3-light-grey">
             <p>Developed @ <a href="https://www.vicara.co/home" target="_blank">Araciv Technologies Pvt.Ltd</a></p>
             </footer>
+            <!-- Data List -->
             
             <!-- Modal -->
             <div id ="modal_add_components" class="w3-modal w3-card-4">

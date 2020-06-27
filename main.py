@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 import csv, json
 from tempfile import NamedTemporaryFile
 
@@ -9,6 +9,13 @@ logfeed = []
 data_field = ['Category', 'Name', 'Quantity', 'Location', 'Stock']
 active_search = ""
 cData = None
+components = []
+# Load all Components
+with open(f_path,'r') as f:
+    reader = csv.reader(f)
+    for line in reader:
+        components.append(line[1])
+components = json.dumps(components)
 ############# Non-Flask Functions ####################
 def does_comp_exist(compName, getData=False):
     with open(f_path, 'r') as f:
@@ -77,7 +84,7 @@ def index():
     global cData, logfeed
     check_csv_data()
     #feed_action("New Feed Repo Generated")
-    return render_template('main.html', compData=cData)
+    return render_template('main.html', compData=cData, comp=components)
 
 @app.route('/add_comp', methods=['POST','GET'])
 def add_comp():
@@ -98,7 +105,7 @@ def add_comp():
                 writer = csv.writer(f)
                 writer.writerow(data_field)
             feed_action("Added "+compQnty+" : "+compName)
-    return redirect(url_for('index', compData=None))
+    return redirect(url_for('index', compData=None, comp=components))
 
 @app.route('/search_comp', methods=['POST'])
 def search_comp():
@@ -108,7 +115,7 @@ def search_comp():
         compData = does_comp_exist(compName, True)
         cData = compData
         active_search = compName
-    return redirect(url_for('index', compData=cData))
+    return redirect(url_for('index', compData=cData, comp=components))
 
 @app.route('/borrow_comp', methods=['POST'])
 def borrow_comp():
@@ -120,7 +127,7 @@ def borrow_comp():
         update_csv(compData)
         cData = compData
         feed_action("Borrowed "+request.form['borrow_qty']+" : "+compName)
-    return redirect(url_for('index', compData=cData))
+    return redirect(url_for('index', compData=cData, comp=components))
 
 
 @app.route('/return_comp', methods=['POST'])
@@ -134,7 +141,13 @@ def return_comp():
         update_csv(compData)
         cData = compData
         feed_action("Returned "+compName)
-    return redirect(url_for('index', compData=cData))
+    return redirect(url_for('index', compData=cData, comp=components))
+
+@app.route('/autocomplete', methods=['GET'])
+def autocomplete():
+    search = request.args.get('search-bar')
+    app.logger.debug(search)
+    return jsonify(json_list=components)
 
 if __name__ == "__main__":
     app.run(debug = True)
