@@ -1,4 +1,4 @@
-var feedLen = 12;
+var feedLen = 8;
 var recUser = 3;
 
 /**
@@ -60,6 +60,38 @@ function init_feed(){
  */
 function update_feed(new_entry){
     // Shift all content down
+    //var new_entry = $('#feed-data-meta').data;
+    console.log(new_entry);
+    var i=0;
+    feedLen = (new_entry.length < 8) ? new_entry.length : 8;
+    table = document.getElementById('feed-table');
+    for(i=0;i<feedLen;i++){
+        tr = document.createElement('tr');
+        tr.setAttribute('id', 'feed-'+String(i));
+        if(i%2==0){
+            tr.setAttribute('class', 'w3-grey w3-padding-16');
+        }else{
+            tr.setAttribute('class', 'w3-white w3-padding-16');
+        }
+
+        ico_str = "<i class='fa fa-bell w3-text-blue w3-large'></i>";
+        td1 = document.createElement('td');
+        td1.innerHTML = ico_str;
+        
+        td2 = document.createElement('td');
+        td2.setAttribute('id', `feed-${i}-data`);
+        td2.innerHTML = new_entry[i][0];
+
+        td3 = document.createElement('td');
+        td3.setAttribute('id', 'feed-'+i+'-time');
+        td3.innerHTML =new_entry[i][1];
+
+        tr.appendChild(td1);
+        tr.appendChild(td2);
+        tr.appendChild(td3);
+
+        table.appendChild(tr);
+    }
 }
 
 /* ############### Document Setup ################# */
@@ -68,7 +100,7 @@ function update_feed(new_entry){
  * @brief Function to Call on Load
  */
 function initLoad(){
-    init_feed();
+    //init_feed();
 }
 
 function refresh_components(data){
@@ -83,9 +115,8 @@ function refresh_components(data){
 /* ############### jQuery System ################# */
 function download()
 {
-    var path = "../data/components.csv"; //relative-path
-    $('location').attr('href',path);
- }
+   window.location.href = '/download_csv_report';
+}
 
  $(function () {
      $.ajax(

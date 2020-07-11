@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-import csv, json
+import csv, json, time, os
 from tempfile import NamedTemporaryFile
 
 app = Flask(__name__)
 f_path = "data/components.csv"
 f_path2 = "data/feed.csv"
+f_path3 = "data/users.txt"
 logfeed = []
 data_field = ['Category', 'Name', 'Quantity', 'Location', 'Stock']
 active_search = ""
@@ -15,8 +16,34 @@ with open(f_path,'r') as f:
     reader = csv.reader(f)
     for line in reader:
         components.append(line[1])
-components = json.dumps(components)
+# Load All Logs
+if os.path.exists(f_path2):
+    feed = []
+    with open(f_path2, 'r') as f:
+        rd = csv.reader(f)
+        for line in rd:
+            feed.append(line)
+    if len(feed) < 8:
+        feed_len = len(feed)
+    else:
+        feed_len = 8
+    for i in range(0,feed_len):
+        logfeed.append(feed[i])
+else:
+    with open(f_path2, 'w', newline="") as f:
+        pass
+
+#components = json.dumps(components)
 ############# Non-Flask Functions ####################
+def comUpdate():
+    global components
+    components = []
+    # Load all Components
+    with open(f_path,'r') as f:
+        reader = csv.reader(f)
+        for line in reader:
+            components.append(line[1])
+        
 def does_comp_exist(compName, getData=False):
     with open(f_path, 'r') as f:
         reader = csv.reader(f)
@@ -28,23 +55,22 @@ def does_comp_exist(compName, getData=False):
                     return True
 def feed_action(feedString="None"):
     import os
+    t = list(time.localtime())
+    date = str(t[2]) +"-"+ str(t[1]) +"-"+ str(t[0])
     global logfeed
-    if os.path.exists(f_path2):
-        with open(f_path2, 'r') as f:
-            reader = csv.reader(f)
-            for line in reader:
-                logfeed.append(line)
-    else:
-        with open(f_path2, 'w', newline="") as f:
-            writer = csv.writer(f)
-            for i in range(0,12):
-                logfeed.append(feedString)
-            writer.writerows(logfeed)
     if feedString == "None":
         pass
     else:
-        logfeed = [logfeed[-1]] + logfeed[:-1]
-        logfeed[0] = feedString
+        if len(logfeed) != 0:
+            #logfeed.append()
+            if len(logfeed) == 8:
+                logfeed.pop()
+            logfeed.insert(0, [feedString, date])
+            #logfeed = [logfeed[-1]] + logfeed[:-1]
+            print(logfeed)
+            #logfeed[0] = [feedString, date]
+        else:
+            logfeed.append([feedString, date])
         with open(f_path2, 'w', newline="") as f:
             writer = csv.writer(f)
             writer.writerows(logfeed)
@@ -83,8 +109,9 @@ def update_csv(data_field):
 def index():
     global cData, logfeed
     check_csv_data()
+    comUpdate()
     #feed_action("New Feed Repo Generated")
-    return render_template('main.html', compData=cData, comp=components)
+    return render_template('main.html', compData=cData, comp=components, feedData = logfeed)
 
 @app.route('/add_comp', methods=['POST','GET'])
 def add_comp():
@@ -105,7 +132,8 @@ def add_comp():
                 writer = csv.writer(f)
                 writer.writerow(data_field)
             feed_action("Added "+compQnty+" : "+compName)
-    return redirect(url_for('index', compData=None, comp=components))
+            comUpdate()
+    return redirect(url_for('index', compData=None, comp=components, feedData = logfeed))
 
 @app.route('/search_comp', methods=['POST'])
 def search_comp():
@@ -115,7 +143,8 @@ def search_comp():
         compData = does_comp_exist(compName, True)
         cData = compData
         active_search = compName
-    return redirect(url_for('index', compData=cData, comp=components))
+        comUpdate()
+    return redirect(url_for('index', compData=cData, comp=components, feedData = logfeed))
 
 @app.route('/borrow_comp', methods=['POST'])
 def borrow_comp():
@@ -126,8 +155,9 @@ def borrow_comp():
         compData[4] = str(int(compData[4]) - int(request.form['borrow_qty']))
         update_csv(compData)
         cData = compData
+        comUpdate()
         feed_action("Borrowed "+request.form['borrow_qty']+" : "+compName)
-    return redirect(url_for('index', compData=cData, comp=components))
+    return redirect(url_for('index', compData=cData, comp=components, feedData = logfeed))
 
 
 @app.route('/return_comp', methods=['POST'])
@@ -135,19 +165,30 @@ def return_comp():
     if request.method == 'POST':
         global cData, logfeed
         compName = request.form['compName']
+        compQnty = request.form['ret_qty']
         compData = does_comp_exist(compName, True)
         compData[4] = str(int(compData[4]) + int(request.form['ret_qty']))
-        #print(compName, flush=True)
-        update_csv(compData)
-        cData = compData
-        feed_action("Returned "+compName)
-    return redirect(url_for('index', compData=cData, comp=components))
+        if compData[4] <= compData[2]:
+            #print(compName, flush=True)
+            update_csv(compData)
+            cData = compData
+            feed_action("Returned "+compQnty+" "+compName)
+            comUpdate()
+    return redirect(url_for('index', compData=cData, comp=components, feedData = logfeed))
 
 @app.route('/autocomplete', methods=['GET'])
 def autocomplete():
     search = request.args.get('search-bar')
     app.logger.debug(search)
     return jsonify(json_list=components)
+
+@app.route('/download_csv_report')
+def download_csv_report():
+    global cData, components, logfeed
+    feed_action("CSV Output File Generated")
+    path = os.path.realpath(f_path2)
+    os.startfile(path)
+    return redirect(url_for('index', compData=cData, comp=components, feedData = logfeed))
 
 if __name__ == "__main__":
     app.run(debug = True)

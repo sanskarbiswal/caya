@@ -129,9 +129,9 @@
                             <form action="/search_comp" method="POST">
                                 <input id="autocomplete" list="component-search" name="search_component" class="w3-input w3-light-grey w3-threequarter w3-round w3-margin-right" type="search">
                                 <datalist id="component-search">
-                                    {% block javascript %}
-                                        refresh_components({{comp | tojson}});
-                                    {% endblock %}
+                                    {% for item in comp %}
+                                        <option>{{item}}</option>
+                                    {% endfor %}
                                 </datalist>
                                 <button class="w3-button w3-blue"><i class="fa fa-search"></i> Search</button>
                             </form>
@@ -151,16 +151,27 @@
               </div>
               <div class="w3-twothird">
                 <h5 class="w3-text-white w3-bold w3-bottombar w3-border-blue">Feeds</h5>
-                <table id="feed-table" class="w3-table w3-striped w3-white"></table>
-                <script type="text/javascript">
-                    
-                </script>
+                {% if feedData==None %}
+                <table id="feed-table" class="w3-table w3-striped w3-white">
+                    <script type="text/javascript">
+                        init_feed();
+                    </script>
+                </table>
+                {% endif %}
+                {% if feedData!=None %}
+                <table id="feed-table" class="w3-table w3-striped w3-white">
+                    <script type="text/javascript">
+                        var fd = {{ feedData|tojson }};
+                        //update_feed("{{feedData}}");
+                        update_feed(fd);
+                    </script>
+                </table>
+                {% endif %}
               </div>
             </div>
         </div>
             <hr>
             
-            <hr>
             <div class="w3-container w3-dark-grey w3-padding-32">
                 <div class="w3-row">
                     <div class="w3-container w3-third">
@@ -171,7 +182,7 @@
                     </div>
                     <div class="w3-container w3-third">
                         <h5 class="w3-bottombar w3-border-red">Export</h5>
-                        <p><i class="fa fa-download"></i> <a href="#" onclick="download()">CSV</a></p>
+                        <p><i class="fa fa-download"></i> <a href="#" onclick="location.href='/download_csv_report'">CSV</a></p>
                         
                     </div>
                     <div class="w3-container w3-third">
@@ -183,7 +194,7 @@
                 </div>
             </div>
             <!-- Footer -->
-            <footer class="w3-container w3-padding w3-light-grey">
+            <footer class="w3-container w3-light-grey">
             <p>Developed @ <a href="https://www.vicara.co/home" target="_blank">Araciv Technologies Pvt.Ltd</a></p>
             </footer>
             <!-- Data List -->
@@ -205,7 +216,12 @@
                             </select>
                             <hr>
                             <div class="w3-row">
-                                <input name="inp_add_comp_name" id="inp_comp_add_name" class="w3-input w3-margin w3-twothird" type="text" placeholder="COMPONENT NAME">
+                                <input name="inp_add_comp_name" id="inp_comp_add_name" class="w3-input w3-margin w3-twothird" type="text" list="component-search" placeholder="COMPONENT NAME">
+                                <datalist id="component-search">
+                                    {% for item in comp %}
+                                        <option>{{item}}</option>
+                                    {% endfor %}
+                                </datalist>
                                 <input name="inp_add_comp_qnty" class="w3-input w3-margin w3-quarter" type="number" placeholder="QTY">
                             </div>
                             <input name="inp_add_comp_loc" class="w3-input" type="text" placeholder="COMPONENT LOCATION (Eg. 1-1)">
@@ -225,7 +241,12 @@
                     <div class="w3-container">
                         <form name="ret_comp" class="w3-input" method="POST" action="/return_comp">
                             <div class="w3-row w3-padding">
-                                <input type="text" class="w3-input w3-padding w3-margin w3-third" name="compName"  placeholder="Component Name">
+                                <input type="text" class="w3-input w3-padding w3-margin w3-third" list="component-search" name="compName"  placeholder="Component Name">
+                                <datalist id="component-search">
+                                    {% for item in comp %}
+                                        <option>{{item}}</option>
+                                    {% endfor %}
+                                </datalist>
                                 <input type="number" class="w3-input w3-padding w3-quarter w3-margin" name="ret_qty" placeholder="QTY">
                             </div>
                             <div class="w3-row w3-padding">
