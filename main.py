@@ -12,10 +12,14 @@ active_search = ""
 cData = None
 components = []
 # Load all Components
-with open(f_path,'r') as f:
-    reader = csv.reader(f)
-    for line in reader:
-        components.append(line[1])
+if os.path.exists(f_path):
+    with open(f_path,'r') as f:
+        reader = csv.reader(f)
+        for line in reader:
+            components.append(line[1])
+else:
+    with open(f_path,'w') as f:
+        pass
 # Load All Logs
 if os.path.exists(f_path2):
     feed = []
